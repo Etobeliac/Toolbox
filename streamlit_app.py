@@ -22,21 +22,21 @@ def load_module(module_name, file_path):
 
 if option1 == 'Scrap URL brouillon WP':
     # Chemin relatif au fichier scrap-url-brouillon-wp.py
-    file_path = os.path.join('main', 'scripts', 'scrap-url-brouillon-wp.py')
+    file_path = os.path.join('scripts', 'scrap-url-brouillon-wp.py')
     module = load_module('scrap_url_brouillon_wp', file_path)
     if module:
         module.scrap_brouillon_site()
 
 elif option1 == 'GPT Bulk':
     # Importer et exécuter le script gpt-bulk.py
-    file_path = os.path.join('main', 'scripts', 'gpt-bulk.py')
+    file_path = os.path.join('scripts', 'gpt-bulk.py')
     module = load_module('gpt_bulk', file_path)
     if module:
         module.run()
 
 else:
     # Importer et exécuter le script fichier3.py
-    file_path = os.path.join('main', 'scripts', 'fichier3.py')
+    file_path = os.path.join('scripts', 'fichier3.py')
     module = load_module('fichier3', file_path)
     if module:
         module.run()
