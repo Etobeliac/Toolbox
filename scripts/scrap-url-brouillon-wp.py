@@ -1,46 +1,104 @@
 import streamlit as st
-import importlib.util
-import os
+import requests
+import pandas as pd
+from requests.auth import HTTPBasicAuth
+import io
+import csv
+import html
 
-# Titre de l'application
-st.title('Mon Application avec Dérouleurs')
+@st.cache_data(ttl=3600)  # Cache les résultats pendant 1 heure
+def get_draft_urls_and_content(username, password, base_url):
+    url = f"{base_url}/wp-json/wp/v2/posts?status=draft&per_page=100"
+    all_posts = []
+    page = 1
+    
+    while True:
+        page_url = f"{url}&page={page}"
+        response = requests.get(page_url, auth=HTTPBasicAuth(username, password))
+        
+        if response.status_code != 200:
+            break
+        
+        posts = response.json()
+        if not posts:
+            break
+        
+        all_posts.extend(posts)
+        page += 1
 
-# Barre latérale pour la navigation
-st.sidebar.header('Menu')
+    urls_and_content = []
+    for post in all_posts:
+        categories = []
+        if 'categories' in post:
+            categories_ids = post['categories']
+            for category_id in categories_ids:
+                category_response = requests.get(f"{base_url}/wp-json/wp/v2/categories/{category_id}", auth=HTTPBasicAuth(username, password))
+                if category_response.status_code == 200:
+                    category_name = category_response.json().get('name', '')
+                    categories.append(category_name)
+        
+        content_html = post.get('content', {}).get('rendered', '')
+        content_html = html.unescape(content_html)  # Décodage des entités HTML
+        
+        urls_and_content.append({
+            'URL du site': base_url,
+            'URL du brouillon': post['link'],
+            'Thématique': ', '.join(categories),
+            'Contenu': content_html
+        })
 
-# Dérouleur 1 - Mettre à jour le nom de l'option
-option1 = st.sidebar.selectbox('G-News', ['Scrap URL brouillon WP', 'GPT Bulk', 'Fichier 3'])
+    return urls_and_content
 
-def load_module(module_name, file_path):
-    if not os.path.isfile(file_path):
-        st.error(f"Le fichier {file_path} est introuvable. Veuillez vérifier le chemin.")
-        return None
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def scrap_brouillon_site():
+    st.title("Récupérateur d'URLs et Contenu des Articles en Brouillon WordPress")
 
-if option1 == 'Scrap URL brouillon WP':
-    # Chemin relatif au fichier scrap-url-brouillon-wp.py
-    file_path = os.path.join('scripts', 'scrap-url-brouillon-wp.py')
-    module = load_module('scrap_url_brouillon_wp', file_path)
-    if module:
-        # Diagnostic: Afficher les attributs du module pour vérifier ce qui est disponible
-        st.write("Attributs du module chargé:", dir(module))
-        # Assurez-vous que la fonction est bien nommée `scrap_brouillon_site`
-        module.scrap_brouillon_site()
+    username = st.text_input("Nom d'utilisateur WordPress")
+    password = st.text_input("Mot de passe WordPress", type="password")
+    base_urls = st.text_area("URLs de base de vos sites WordPress (une par ligne)")
 
-elif option1 == 'GPT Bulk':
-    # Importer et exécuter le script gpt-bulk.py
-    file_path = os.path.join('scripts', 'gpt-bulk.py')
-    module = load_module('gpt_bulk', file_path)
-    if module:
-        module.run()
+    if st.button("Récupérer les URLs et le Contenu"):
+        if not username or not password or not base_urls:
+            st.error("Veuillez remplir tous les champs.")
+        else:
+            base_urls_list = [url.strip() for url in base_urls.split("\n") if url.strip()]
+            all_data = []
+            progress_bar = st.progress(0)
 
-else:
-    # Importer et exécuter le script fichier3.py
-    file_path = os.path.join('scripts', 'fichier3.py')
-    module = load_module('fichier3', file_path)
-    if module:
-        module.run()
+            for i, base_url in enumerate(base_urls_list):
+                st.write(f"Traitement du site : {base_url}")
+                
+                data = get_draft_urls_and_content(username, password, base_url)
+                if data:
+                    all_data.extend(data)
+                    st.write(f"Nombre d'articles trouvés pour {base_url}: {len(data)}")
+                else:
+                    st.write(f"Aucun article trouvé pour {base_url}")
+                
+                progress_bar.progress((i + 1) / len(base_urls_list))
 
+            st.success("Récupération terminée.")
+
+            if all_data:
+                st.success(f"Articles en brouillon récupérés avec succès. Total: {len(all_data)} articles.")
+                
+                df = pd.DataFrame(all_data)
+                st.write("Aperçu des données récupérées (avec un extrait du contenu) :")
+                preview_df = df[['URL du site', 'URL du brouillon', 'Thématique', 'Contenu']].head(10).copy()
+                preview_df['Contenu'] = preview_df['Contenu'].str[:100] + '...'
+                st.write(preview_df)
+
+                csv_buffer = io.StringIO()
+                df.to_csv(csv_buffer, index=False, quoting=csv.QUOTE_ALL, encoding='utf-8-sig', sep=';')
+                csv_data = csv_buffer.getvalue()
+                
+                st.download_button(
+                    label="Télécharger tous les résultats (CSV)",
+                    data=csv_data.encode('utf-8-sig'),
+                    file_name="articles_brouillons.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("Aucun article en brouillon trouvé.")
+
+    if st.button("Réinitialiser"):
+        st.experimental_rerun()
