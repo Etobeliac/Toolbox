@@ -9,7 +9,7 @@ st.title('Mon Application avec Dérouleurs')
 st.sidebar.header('Menu')
 
 # Dérouleur 1 - Mettre à jour le nom de l'option
-option1 = st.sidebar.selectbox('G-News', ['Scrap URL brouillon WP', 'GPT Bulk', 'Fichier 3'])
+option1 = st.sidebar.selectbox('G-News', ['Scrap URL brouillon WP', 'GPT Bulk', 'Publication Article WP'])
 
 def load_module(module_name, file_path):
     if not os.path.isfile(file_path):
@@ -34,9 +34,9 @@ elif option1 == 'GPT Bulk':
     if module:
         module.run()
 
-else:
-    # Importer et exécuter le script fichier3.py
-    file_path = os.path.join('scripts', 'fichier3.py')
-    module = load_module('fichier3', file_path)
+elif option1 == 'Publication Article WP':
+    # Importer et exécuter le script Publication-article-WP.py
+    file_path = os.path.join('scripts', 'Publication-article-WP.py')
+    module = load_module('publication_article_wp', file_path)
     if module:
-        module.run()
+        module.publish_articles()
