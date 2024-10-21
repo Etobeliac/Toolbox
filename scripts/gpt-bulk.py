@@ -8,8 +8,8 @@ def run():
     # Entrée pour la clé API OpenAI
     api_key = st.text_input("Entrez votre clé API OpenAI", type="password")
 
-    # Sélection du modèle
-    model_choice = st.selectbox("Choisissez le modèle", ["gpt-4", "gpt-4-turbo"])
+    # Sélection du modèle, avec l'ajout de "gpt-4o-mini"
+    model_choice = st.selectbox("Choisissez le modèle", ["gpt-4", "gpt-4o-mini"])
 
     # Exemple de DataFrame vide que l'utilisateur peut éditer
     df = pd.DataFrame({
