@@ -9,7 +9,7 @@ def run():
     api_key = st.text_input("Entrez votre clé API OpenAI", type="password")
 
     # Sélection du modèle
-    model_choice = st.selectbox("Choisissez le modèle", ["gpt-4o", "gpt-4o-mini"])
+    model_choice = st.selectbox("Choisissez le modèle", ["gpt-4", "gpt-4-turbo"])
 
     # Exemple de DataFrame vide que l'utilisateur peut éditer
     df = pd.DataFrame({
@@ -26,12 +26,13 @@ def run():
         for index, row in edited_df.iterrows():
             if row['Prompt']:
                 try:
-                    response = openai.Completion.create(
+                    # Using the new ChatCompletion method
+                    response = openai.ChatCompletion.create(
                         model=model_choice,
-                        prompt=row['Prompt'],
+                        messages=[{"role": "user", "content": row['Prompt']}],
                         max_tokens=150
                     )
-                    edited_df.at[index, 'Résultat'] = response.choices[0].text.strip()
+                    edited_df.at[index, 'Résultat'] = response.choices[0].message['content'].strip()
                 except Exception as e:
                     st.error(f"Erreur lors de l'appel à l'API : {e}")
 
