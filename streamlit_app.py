@@ -17,14 +17,16 @@ def load_module(module_name, file_path):
     spec.loader.exec_module(module)
     return module
 
-if option1 == 'Fichier 1':
-    # Importer et exécuter le script fichier1.py
-    module = load_module('fichier1', os.path.join('scripts', 'fichier1.py'))
-    module.run()
+if option1 == 'Scrap URL brouillon WP':
+    # Importer et exécuter le script scrap-url-brouillon-wp.py
+    module = load_module('scrap_url_brouillon_wp', os.path.join('scripts', 'scrap-url-brouillon-wp.py'))
+    module.scrap_brouillon_site()
+    
 elif option1 == 'GPT Bulk':
     # Importer et exécuter le script gpt-bulk.py
     module = load_module('gpt_bulk', os.path.join('scripts', 'gpt-bulk.py'))
     module.run()
+    
 else:
     # Importer et exécuter le script fichier3.py
     module = load_module('fichier3', os.path.join('scripts', 'fichier3.py'))
