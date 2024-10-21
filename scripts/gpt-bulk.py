@@ -32,7 +32,7 @@ def run():
                         max_tokens=150
                     )
                     edited_df.at[index, 'Résultat'] = response.choices[0].message['content'].strip()
-                except openai.error.OpenAIError as e:
+                except Exception as e:
                     st.error(f"Erreur lors de l'appel à l'API : {e}")
 
     # Afficher le DataFrame avec les résultats mis à jour
