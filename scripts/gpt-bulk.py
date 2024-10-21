@@ -21,17 +21,19 @@ def run():
     edited_df = st.data_editor(df, num_rows="dynamic")
 
     if st.button("Traiter les prompts") and api_key:
-        # Créer un client OpenAI avec la clé API
-        client = openai.Client(api_key=api_key)
+        openai.api_key = api_key
         
         for index, row in edited_df.iterrows():
             if row['Prompt']:
-                response = client.completions.create(
-                    model=model_choice,
-                    prompt=row['Prompt'],
-                    max_tokens=150
-                )
-                edited_df.at[index, 'Résultat'] = response.choices[0].text.strip()
+                try:
+                    response = openai.Completion.create(
+                        model=model_choice,
+                        prompt=row['Prompt'],
+                        max_tokens=150
+                    )
+                    edited_df.at[index, 'Résultat'] = response.choices[0].text.strip()
+                except openai.error.OpenAIError as e:
+                    st.error(f"Erreur lors de l'appel à l'API : {e}")
 
     # Afficher le DataFrame avec les résultats mis à jour
     st.write(edited_df)
