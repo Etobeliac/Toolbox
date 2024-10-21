@@ -17,8 +17,8 @@ def run():
         'Résultat': ['']
     })
 
-    # Éditeur de données expérimental pour permettre l'édition directe
-    edited_df = st.experimental_data_editor(df)
+    # Utiliser st.data_editor pour permettre l'édition directe
+    edited_df = st.data_editor(df, num_rows="dynamic")
 
     if st.button("Traiter les prompts") and api_key:
         openai.api_key = api_key
