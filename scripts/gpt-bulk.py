@@ -8,8 +8,8 @@ def run():
     # Entrée pour la clé API OpenAI
     api_key = st.text_input("Entrez votre clé API OpenAI", type="password")
 
-    # Sélection du modèle, avec l'ajout de "gpt-4o-mini"
-    model_choice = st.selectbox("Choisissez le modèle", ["gpt-4", "gpt-4o-mini"])
+    # Sélection du modèle, avec l'ajustement de "gpt-4o"
+    model_choice = st.selectbox("Choisissez le modèle", ["gpt-4o", "gpt-4o-mini"])
 
     # Exemple de DataFrame vide que l'utilisateur peut éditer
     df = pd.DataFrame({
@@ -21,13 +21,13 @@ def run():
     edited_df = st.data_editor(df, num_rows="dynamic")
 
     if st.button("Traiter les prompts") and api_key:
-        # Instantiate the OpenAI client
+        # Instancier le client OpenAI
         client = OpenAI(api_key=api_key)
         
         for index, row in edited_df.iterrows():
             if row['Prompt']:
                 try:
-                    # Use the new client-based method for chat completions
+                    # Utiliser la nouvelle méthode basée sur le client pour les complétions de chat
                     response = client.chat.completions.create(
                         model=model_choice,
                         messages=[{"role": "user", "content": row['Prompt']}],
