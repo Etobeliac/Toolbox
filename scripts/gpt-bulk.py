@@ -11,29 +11,28 @@ def run():
     # Sélection du modèle
     model_choice = st.selectbox("Choisissez le modèle", ["gpt-4o", "gpt-4o-mini"])
 
-    # Initialiser un DataFrame vide
-    df = pd.DataFrame(columns=['Prompt', 'Résultat'])
+    # Exemple de DataFrame vide que l'utilisateur peut éditer
+    df = pd.DataFrame({
+        'Prompt': [''],
+        'Résultat': ['']
+    })
 
-    # Ajouter des prompts via une zone de texte
-    new_prompt = st.text_input("Entrez un nouveau prompt ici")
-    
-    if st.button("Ajouter le prompt"):
-        df = df.append({'Prompt': new_prompt, 'Résultat': ''}, ignore_index=True)
+    # Éditeur de données expérimental pour permettre l'édition directe
+    edited_df = st.experimental_data_editor(df)
 
-    # Traiter les prompts si la clé API est fournie
     if st.button("Traiter les prompts") and api_key:
         openai.api_key = api_key
-        for index, row in df.iterrows():
+        for index, row in edited_df.iterrows():
             if row['Prompt']:
                 response = openai.Completion.create(
                     engine=model_choice,
                     prompt=row['Prompt'],
                     max_tokens=150
                 )
-                df.at[index, 'Résultat'] = response.choices[0].text.strip()
+                edited_df.at[index, 'Résultat'] = response.choices[0].text.strip()
 
-    # Afficher le DataFrame avec les résultats
-    st.write(df)
+    # Afficher le DataFrame avec les résultats mis à jour
+    st.write(edited_df)
 
 if __name__ == "__main__":
     run()
