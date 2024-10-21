@@ -15,3 +15,6 @@ else:
     script_path = os.path.join('scripts', selected_option)
     with open(script_path) as f:
         exec(f.read())
+# Barre latérale pour la navigation
+options = ['G News'] + [f for f in os.listdir('scripts') if f.endswith('.py')]
+selected_option = st.sidebar.selectbox('Choisissez un outil', options)
