@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import importlib.util
 
 # Titre de l'application
 st.title('Mon Toolbox')
@@ -12,9 +13,8 @@ selected_option = st.sidebar.selectbox('Choisissez un outil', options)
 if selected_option == 'Accueil':
     st.write('Utilisez la barre latérale pour accéder aux différents outils.')
 else:
-    script_path = os.path.join('scripts', selected_option)
-    if os.path.exists(script_path):
-        with open(script_path) as f:
-            exec(f.read())
-    else:
-        st.error(f"Le fichier {selected_option} n'existe pas.")
+    module_name = selected_option.replace('.py', '')
+    spec = importlib.util.spec_from_file_location(module_name, os.path.join('scripts', selected_option))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.run()
