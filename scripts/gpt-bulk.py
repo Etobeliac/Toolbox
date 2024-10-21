@@ -3,40 +3,45 @@ import pandas as pd
 import openai
 
 def run():
-    st.header("GPT Bulk Processing")
+    st.header("Traitement en masse GPT")
 
-    # Entrée pour la clé API OpenAI
-    api_key = st.text_input("Entrez votre clé API OpenAI", type="password")
+    # Configuration de l'API OpenAI (à remplacer par vos clés)
+    openai.api_key = "votre_clé_api"  # Remplacez par votre clé API réelle
+    model_engine = "text-davinci-003"  # Choisissez le modèle approprié
 
-    # Sélection du modèle
-    model_choice = st.selectbox("Choisissez le modèle", ["gpt-4o", "gpt-4o-mini"])
+    # Création d'un DataFrame pour les prompts et les résultats
+    df = pd.DataFrame({'Prompt': [], 'Résultat': []})
 
-    # Exemple de DataFrame vide que l'utilisateur peut éditer
-    df = pd.DataFrame({
-        'Prompt': [''],
-        'Résultat': ['']
-    })
+    # Zone d'édition pour les prompts
+    edited_df = st.data_editor(df)
 
-    # Utiliser st.data_editor pour permettre l'édition directe
-    edited_df = st.data_editor(df, num_rows="dynamic")
-
-    if st.button("Traiter les prompts") and api_key:
-        openai.api_key = api_key
-        
+    # Bouton pour lancer le traitement
+    if st.button("Traiter les prompts"):
         for index, row in edited_df.iterrows():
-            if row['Prompt']:
+            prompt = row['Prompt']
+            if prompt:
                 try:
-                    response = openai.ChatCompletion.create(
-                        model=model_choice,
-                        messages=[{"role": "user", "content": row['Prompt']}],
-                        max_tokens=150
+                    # Appel à l'API OpenAI
+                    response = openai.Completion.create(
+                        engine=model_engine,
+                        prompt=prompt,
+                        max_tokens=1024,
+                        n=1,
+                        stop=None,
+                        temperature=0.7
                     )
-                    edited_df.at[index, 'Résultat'] = response.choices[0].message['content'].strip()
-                except Exception as e:
-                    st.error(f"Erreur lors de l'appel à l'API : {e}")
 
-    # Afficher le DataFrame avec les résultats mis à jour
-    st.write(edited_df)
+                    # Récupération du résultat
+                    result = response.choices[0].text.strip()
+                    edited_df.at[index, 'Résultat'] = result
+
+                except openai.error.APIError as e:
+                    st.error(f"Erreur de l'API OpenAI : {e}")
+                except Exception as e:
+                    st.error(f"Erreur inattendue : {e}")
+
+        # Mise à jour du DataFrame avec les nouveaux résultats
+        st.data_editor(edited_df)
 
 if __name__ == "__main__":
     run()
