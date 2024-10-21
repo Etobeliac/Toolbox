@@ -3,7 +3,7 @@ import importlib.util
 import os
 
 # Titre de l'application
-st.title('Mon Application avec Dérouleurs')
+st.title('ToolBox')
 
 # Barre latérale pour la navigation
 st.sidebar.header('Menu')
