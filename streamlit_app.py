@@ -26,14 +26,14 @@ if option1 == 'Scrap URL brouillon WP':
     module = load_module('scrap_url_brouillon_wp', file_path)
     if module:
         module.scrap_brouillon_site()
-    
+
 elif option1 == 'GPT Bulk':
     # Importer et exécuter le script gpt-bulk.py
     file_path = os.path.join('main', 'scripts', 'gpt-bulk.py')
     module = load_module('gpt_bulk', file_path)
     if module:
         module.run()
-    
+
 else:
     # Importer et exécuter le script fichier3.py
     file_path = os.path.join('main', 'scripts', 'fichier3.py')
