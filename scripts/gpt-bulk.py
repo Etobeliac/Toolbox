@@ -1,47 +1,29 @@
-import streamlit as st
-import pandas as pd
 import openai
 
-def run():
-    st.header("Traitement en masse GPT")
+def gpt_bulk(prompt, model="text-davinci-003", max_tokens=1024, temperature=0.7):
+    """
+    Génère du texte à partir d'un prompt en utilisant l'API OpenAI.
 
-    # Configuration de l'API OpenAI (à remplacer par vos clés)
-    openai.api_key = "votre_clé_api"  # Remplacez par votre clé API réelle
-    model_engine = "text-davinci-003"  # Choisissez le modèle approprié
+    Args:
+        prompt (str): Le prompt à utiliser pour la génération de texte.
+        model (str, optional): Le modèle GPT à utiliser. Defaults to "text-davinci-003".
+        max_tokens (int, optional): Le nombre maximum de tokens dans la réponse. Defaults to 1024.
+        temperature (float, optional): Le paramètre de température pour contrôler la créativité. Defaults to 0.7.
 
-    # Création d'un DataFrame pour les prompts et les résultats
-    df = pd.DataFrame({'Prompt': [], 'Résultat': []})
+    Returns:
+        str: Le texte généré.
+    """
 
-    # Zone d'édition pour les prompts
-    edited_df = st.data_editor(df)
-
-    # Bouton pour lancer le traitement
-    if st.button("Traiter les prompts"):
-        for index, row in edited_df.iterrows():
-            prompt = row['Prompt']
-            if prompt:
-                try:
-                    # Appel à l'API OpenAI
-                    response = openai.Completion.create(
-                        engine=model_engine,
-                        prompt=prompt,
-                        max_tokens=1024,
-                        n=1,
-                        stop=None,
-                        temperature=0.7
-                    )
-
-                    # Récupération du résultat
-                    result = response.choices[0].text.strip()
-                    edited_df.at[index, 'Résultat'] = result
-
-                except openai.error.APIError as e:
-                    st.error(f"Erreur de l'API OpenAI : {e}")
-                except Exception as e:
-                    st.error(f"Erreur inattendue : {e}")
-
-        # Mise à jour du DataFrame avec les nouveaux résultats
-        st.data_editor(edited_df)
-
-if __name__ == "__main__":
-    run()
+    try:
+        response = openai.Completion.create(
+            engine=model,
+            prompt=prompt,
+            max_tokens=max_tokens,
+            n=1,
+            stop=None,
+            temperature=temperature
+        )
+        return response.choices[0].text.strip()
+    except openai.error.APIError as e:
+        print(f"Erreur de l'API OpenAI : {e}")
+        return None
