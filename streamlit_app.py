@@ -7,7 +7,7 @@ st.title('Mon Application avec Dérouleurs')
 st.sidebar.header('Menu')
 
 # Dérouleur 1
-option1 = st.sidebar.selectbox('Choisissez une option 1:', ['Fichier 1', 'Fichier 2', 'Fichier 3'])
+option1 = st.sidebar.selectbox('G-News', ['Fichier 1', 'Fichier 2', 'Fichier 3'])
 if option1 == 'Fichier 1':
     st.write('Contenu du Fichier 1')
 elif option1 == 'Fichier 2':
