@@ -8,8 +8,8 @@ st.title('Mon Application avec Dérouleurs')
 # Barre latérale pour la navigation
 st.sidebar.header('Menu')
 
-# Dérouleur 1
-option1 = st.sidebar.selectbox('G-News', ['Fichier 1', 'GPT Bulk', 'Fichier 3'])
+# Dérouleur 1 - Mettre à jour le nom de l'option
+option1 = st.sidebar.selectbox('G-News', ['Scrap URL brouillon WP', 'GPT Bulk', 'Fichier 3'])
 
 def load_module(module_name, file_path):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
