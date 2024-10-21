@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-import importlib.util
 
 # Titre de l'application
 st.title('Mon Application avec Dérouleurs')
@@ -12,13 +11,14 @@ st.sidebar.header('Menu')
 option1 = st.sidebar.selectbox('G-News', ['Fichier 1', 'GPT Bulk', 'Fichier 3'])
 
 if option1 == 'Fichier 1':
-    st.write('Contenu du Fichier 1')
+    # Importer et exécuter le script fichier1.py
+    import fichier1
+    fichier1.run()
 elif option1 == 'GPT Bulk':
-    # Charger et exécuter le script gpt-bulk.py
-    script_path = os.path.join('scripts', 'gpt-bulk.py')
-    spec = importlib.util.spec_from_file_location("gpt_bulk", script_path)
-    gpt_bulk = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(gpt_bulk)
-    gpt_bulk.run()  # Assurez-vous que gpt-bulk.py a une fonction run()
+    # Importer et exécuter le script gpt_bulk.py
+    import gpt_bulk
+    gpt_bulk.run()
 else:
-    st.write('Contenu du Fichier 3')
+    # Importer et exécuter le script fichier3.py
+    import fichier3
+    fichier3.run()
