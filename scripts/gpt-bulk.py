@@ -26,12 +26,12 @@ def run():
         for index, row in edited_df.iterrows():
             if row['Prompt']:
                 try:
-                    response = openai.Completion.create(
+                    response = openai.ChatCompletion.create(
                         model=model_choice,
-                        prompt=row['Prompt'],
+                        messages=[{"role": "user", "content": row['Prompt']}],
                         max_tokens=150
                     )
-                    edited_df.at[index, 'Résultat'] = response.choices[0].text.strip()
+                    edited_df.at[index, 'Résultat'] = response.choices[0].message['content'].strip()
                 except openai.error.OpenAIError as e:
                     st.error(f"Erreur lors de l'appel à l'API : {e}")
 
