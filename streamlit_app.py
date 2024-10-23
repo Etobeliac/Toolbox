@@ -8,10 +8,10 @@ st.title('ToolBox')
 # Barre latérale pour la navigation
 st.sidebar.header('Menu')
 
-# Dérouleur 1 - Ajouter l'option "Tutoriel"
+# Dérouleur 1 - Ajouter l'option pour le nouveau script
 option1 = st.sidebar.selectbox(
     'G-News', 
-    ['Tutoriel', 'Scrap URL brouillon WP', 'GPT Bulk', 'Publication Article WP']
+    ['Tutoriel', 'Scrap URL brouillon WP', 'GPT Bulk', 'Publication Article WP', 'Ajout Lien sur Ancre']
 )
 
 def load_module(module_name, file_path):
@@ -34,6 +34,7 @@ if option1 == 'Tutoriel':
     1. **Scrap URL brouillon WP** : Récupère les URL et contenus des articles brouillons depuis votre site WordPress.
     2. **GPT Bulk** : Effectue du traitement de texte en masse via OpenAI GPT.
     3. **Publication Article WP** : Publie des articles sur vos sites WordPress directement à partir de données que vous fournissez.
+    4. **Ajout Lien sur Ancre** : Détecte et modifie les ancres dans les textes d'articles pour y ajouter des liens.
     
     ### Comment Utiliser :
     
@@ -64,3 +65,10 @@ elif option1 == 'Publication Article WP':
     module = load_module('publication_article_wp', file_path)
     if module:
         module.publish_articles()
+
+elif option1 == 'Ajout Lien sur Ancre':
+    # Importer et exécuter le script ajout-lien-sur-ancre.py
+    file_path = os.path.join('scripts', 'ajout-lien-sur-ancre.py')
+    module = load_module('ajout_lien_sur_ancre', file_path)
+    if module:
+        module.main()
