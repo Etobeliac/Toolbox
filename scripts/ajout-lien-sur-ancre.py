@@ -1,9 +1,12 @@
 import streamlit as st
+import requests
 import pandas as pd
+from requests.auth import HTTPBasicAuth
 import io
 import csv
 import random
 import re
+import html
 
 # Liste des ancres possibles
 ancres = [
@@ -32,10 +35,13 @@ ancres = [
     "Profiter des offres", "Bénéficier des offres", "S'inscrire à la newsletter", "Recevoir les actualités"
 ]
 
-def insert_anchor(content, link):
+def insert_anchor(content, new_link):
+    """
+    Insère aléatoirement une ancre dans le contenu avec le lien fourni.
+    """
     # Diviser le contenu en paragraphes
     paragraphs = re.split(r'(?<=</p>)\s*(?=<p>)', content)
-    
+
     if len(paragraphs) > 1:
         # Choisir aléatoirement un paragraphe (sauf le dernier)
         insert_index = random.randint(0, len(paragraphs) - 2)
@@ -43,73 +49,114 @@ def insert_anchor(content, link):
         # Choisir une ancre aléatoire
         anchor = random.choice(ancres)
         
-        # Insérer l'ancre à la fin du paragraphe choisi
-        paragraphs[insert_index] = paragraphs[insert_index][:-4] + f' <a href="{link}">{anchor}</a></p>'
+        # Insérer l'ancre avec le lien fourni à la fin du paragraphe choisi
+        paragraphs[insert_index] = paragraphs[insert_index][:-4] + f' <a href="{new_link}">{anchor}</a></p>'
         
         # Rejoindre les paragraphes
         return ''.join(paragraphs)
     else:
         # Si un seul paragraphe, ajouter l'ancre à la fin
         anchor = random.choice(ancres)
-        return content[:-4] + f' <a href="{link}">{anchor}</a></p>'
+        return content[:-4] + f' <a href="{new_link}">{anchor}</a></p>'
 
-def main():
-    st.title("Ajout Automatique d'Ancres avec Liens Personnalisés")
+@st.cache_data(ttl=3600)  # Cache les résultats pendant 1 heure
+def get_draft_urls_and_content(username, password, base_url):
+    url = f"{base_url}/wp-json/wp/v2/posts?status=draft&per_page=100"
+    all_posts = []
+    page = 1
+    
+    while True:
+        page_url = f"{url}&page={page}"
+        response = requests.get(page_url, auth=HTTPBasicAuth(username, password))
+        
+        if response.status_code != 200:
+            break
+        
+        posts = response.json()
+        if not posts:
+            break
+        
+        all_posts.extend(posts)
+        page += 1
 
-    # Exemple de données initiales pour le tableau
-    data = {
-        "Article": [
-            'Le design automobile ne se limite pas à l’esthétique, il influence l’expérience utilisateur.',
-            'Les ajustements de suspension jouent un rôle crucial dans la conduite.'
-        ],
-        "Lien": ["https://votre-lien.com", "https://nouveau-lien.com"]
-    }
+    urls_and_content = []
+    for post in all_posts:
+        categories = []
+        if 'categories' in post:
+            categories_ids = post['categories']
+            for category_id in categories_ids:
+                category_response = requests.get(f"{base_url}/wp-json/wp/v2/categories/{category_id}", auth=HTTPBasicAuth(username, password))
+                if category_response.status_code == 200:
+                    category_name = category_response.json().get('name', '')
+                    categories.append(category_name)
+        
+        content_html = post.get('content', {}).get('rendered', '')
+        content_html = html.unescape(content_html)  # Décodage des entités HTML
+        
+        # Ajouter l'insertion d'ancre ici avec un lien fourni
+        modified_content = insert_anchor(content_html, "https://votre-lien.com")
+        
+        urls_and_content.append({
+            'URL du site': base_url,
+            'URL du brouillon': post['link'],
+            'Thématique': ', '.join(categories),
+            'Contenu': content_html,
+            'Contenu modifié': modified_content
+        })
 
-    # Créer un DataFrame à partir des données initiales
-    df = pd.DataFrame(data)
+    return urls_and_content
 
-    # Afficher et permettre l'édition du tableau
-    st.write("Remplissez le tableau ci-dessous avec vos articles et les liens correspondants :")
-    edited_df = st.data_editor(df, num_rows="dynamic", key="editor")
+def scrap_brouillon_site():
+    st.title("Récupérateur d'URLs et Contenu des Articles en Brouillon WordPress")
 
-    if st.button("Ajouter des Ancres et Traiter les Articles"):
-        if edited_df.empty:
-            st.error("Veuillez entrer au moins un article et un lien.")
+    username = st.text_input("Nom d'utilisateur WordPress")
+    password = st.text_input("Mot de passe WordPress", type="password")
+    base_urls = st.text_area("URLs de base de vos sites WordPress (une par ligne)")
+
+    if st.button("Récupérer les URLs et le Contenu"):
+        if not username or not password or not base_urls:
+            st.error("Veuillez remplir tous les champs.")
         else:
-            # Créer des listes pour stocker les résultats
-            original_texts = []
-            modified_texts = []
-            links = []
+            base_urls_list = [url.strip() for url in base_urls.split("\n") if url.strip()]
+            all_data = []
+            progress_bar = st.progress(0)
 
-            # Traiter chaque article
-            for _, row in edited_df.iterrows():
-                article = row["Article"]
-                link = row["Lien"]
-                modified_text = insert_anchor(article, link)
-                original_texts.append(article)
-                modified_texts.append(modified_text)
-                links.append(link)
+            for i, base_url in enumerate(base_urls_list):
+                st.write(f"Traitement du site : {base_url}")
+                
+                data = get_draft_urls_and_content(username, password, base_url)
+                if data:
+                    all_data.extend(data)
+                    st.write(f"Nombre d'articles trouvés pour {base_url}: {len(data)}")
+                else:
+                    st.write(f"Aucun article trouvé pour {base_url}")
+                
+                progress_bar.progress((i + 1) / len(base_urls_list))
 
-            # Créer un DataFrame avec les résultats
-            results_df = pd.DataFrame({
-                "Article Original": original_texts,
-                "Lien": links,
-                "Article Modifié (avec liens)": modified_texts
-            })
+            st.success("Récupération terminée.")
 
-            # Afficher le DataFrame sur Streamlit
-            st.write("Résultats de l'ajout des ancres :")
-            st.dataframe(results_df)
+            if all_data:
+                st.success(f"Articles en brouillon récupérés avec succès. Total: {len(all_data)} articles.")
+                
+                df = pd.DataFrame(all_data)
+                st.write("Aperçu des données récupérées (avec un extrait du contenu) :")
+                preview_df = df[['URL du site', 'URL du brouillon', 'Thématique', 'Contenu', 'Contenu modifié']].head(10).copy()
+                preview_df['Contenu'] = preview_df['Contenu'].str[:100] + '...'
+                preview_df['Contenu modifié'] = preview_df['Contenu modifié'].str[:100] + '...'
+                st.write(preview_df)
 
-            # Option de téléchargement en CSV avec encodage correct et délimitation par point-virgule
-            csv_buffer = io.StringIO()
-            results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_ALL)
-            st.download_button(
-                label="Télécharger les résultats (CSV)",
-                data=csv_buffer.getvalue().encode('utf-8-sig'),
-                file_name="articles_avec_ancres.csv",
-                mime="text/csv"
-            )
+                csv_buffer = io.StringIO()
+                df.to_csv(csv_buffer, index=False, quoting=csv.QUOTE_ALL, encoding='utf-8-sig', sep=';')
+                csv_data = csv_buffer.getvalue()
+                
+                st.download_button(
+                    label="Télécharger tous les résultats (CSV)",
+                    data=csv_data.encode('utf-8-sig'),
+                    file_name="articles_brouillons.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("Aucun article en brouillon trouvé.")
 
-if __name__ == "__main__":
-    main()
+    if st.button("Réinitialiser"):
+        st.experimental_rerun()
