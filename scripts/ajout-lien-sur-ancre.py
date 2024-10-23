@@ -29,9 +29,10 @@ def main():
     # Exemple de données initiales pour le tableau
     data = {
         "Article": [
-            '<p>Les ajustements de suspension sont cruciaux. <a href="#">Découvrez ici</a> pour en savoir plus.</p>'
-        ] * 5,
-        "Lien": ["https://votre-lien.com"] * 5
+            '<p>Les ajustements de suspension sont cruciaux. <a href="#">Découvrez ici</a> pour en savoir plus.</p>',
+            '<p>Le design influence l’expérience. <a href="#">En savoir plus ici</a>.</p>'
+        ],
+        "Lien": ["https://nouveau-lien.com", "https://votre-lien.com"]
     }
 
     # Créer un DataFrame à partir des données initiales
