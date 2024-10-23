@@ -44,48 +44,45 @@ def detect_and_modify_anchors(text):
 def main():
     st.title("Détecteur et Modificateur d'Ancres dans les Articles")
 
-    # Zone de texte pour coller des articles
-    articles_input = st.text_area("Collez vos articles ici (un par ligne)", height=300)
-    
+    # Exemple de données initiales pour le tableau
+    data = {
+        "Article": ["Collez ou modifiez votre article ici..."] * 5
+    }
+
+    # Créer un DataFrame à partir des données initiales
+    df = pd.DataFrame(data)
+
+    # Afficher et permettre l'édition du tableau
+    st.write("Remplissez le tableau ci-dessous avec vos articles :")
+    edited_df = st.data_editor(df, num_rows="dynamic", key="editor")
+
     if st.button("Traiter les Articles"):
-        if not articles_input:
+        if edited_df.empty:
             st.error("Veuillez entrer au moins un article.")
         else:
-            # Diviser les articles en lignes
-            articles_list = articles_input.split("\n")
-            
             # Créer des listes pour stocker les résultats
             original_texts = []
             modified_texts = []
             statuses = []
-            
+
             # Traiter chaque article
-            for article in articles_list:
+            for _, row in edited_df.iterrows():
+                article = row["Article"]
                 modified_text, status = detect_and_modify_anchors(article)
                 original_texts.append(article)
                 modified_texts.append(modified_text)
                 statuses.append(status)
-            
+
             # Créer un DataFrame avec les résultats
-            df = pd.DataFrame({
+            results_df = pd.DataFrame({
                 "Article Original": original_texts,
                 "Article Modifié (avec liens)": modified_texts,
                 "Statut": statuses
             })
-            
+
             # Afficher le DataFrame sur Streamlit
             st.write("Résultats de la détection et de la modification des ancres :")
-            st.dataframe(df)
-
-            # Option de téléchargement en CSV
-            csv_buffer = io.StringIO()
-            df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
-            st.download_button(
-                label="Télécharger les résultats (CSV)",
-                data=csv_buffer.getvalue().encode('utf-8-sig'),
-                file_name="resultats_ancres.csv",
-                mime="text/csv"
-            )
+            st.dataframe(results_df)
 
 if __name__ == "__main__":
     main()
