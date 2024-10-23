@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
-import re
 import random
+import re
 import io
-import csv
 
 # Liste des ancres possibles
 ancres = [
@@ -32,47 +31,35 @@ ancres = [
     "Profiter des offres", "Bénéficier des offres", "S'inscrire à la newsletter", "Recevoir les actualités"
 ]
 
-def insert_anchor(content, new_link):
-    """
-    Insère aléatoirement une ancre dans le contenu avec le lien fourni.
-    """
+def insert_anchor_randomly(content, anchor_html):
     # Diviser le contenu en paragraphes
-    paragraphs = re.split(r'(?<=</p>)\s*(?=<p>)', content)
-
+    paragraphs = content.split("</p>")
     if len(paragraphs) > 1:
-        # Choisir aléatoirement un paragraphe (sauf le dernier)
+        # Choisir aléatoirement un paragraphe pour ajouter l'ancre
         insert_index = random.randint(0, len(paragraphs) - 2)
-        
-        # Choisir une ancre aléatoire
-        anchor = random.choice(ancres)
-        
-        # Insérer l'ancre avec le lien à la fin du paragraphe choisi
-        paragraphs[insert_index] = paragraphs[insert_index][:-4] + f' <a href="{new_link}">{anchor}</a></p>'
-        
-        # Rejoindre les paragraphes
-        return ''.join(paragraphs)
-    else:
-        # Si un seul paragraphe, ajouter l'ancre à la fin
-        anchor = random.choice(ancres)
-        return content[:-4] + f' <a href="{new_link}">{anchor}</a></p>'
+        paragraphs[insert_index] += f" {anchor_html}"
+    return "</p>".join(paragraphs)
+
+def format_anchor(url, text):
+    # Créer une ancre avec le lien et le texte fourni
+    return f'<a href={url}>{text}</a>'
 
 def main():
     st.title("Ajout Automatique de Liens sur Ancres dans les Articles")
-    st.write("Fournissez les articles et les liens, et insérez automatiquement les ancres avec les liens.")
-
+    
     # Exemple de données initiales pour le tableau
     data = {
         "Article": ["Collez ou modifiez votre article ici..."] * 5,
         "Lien": ["https://votre-lien.com"] * 5
     }
-
+    
     # Créer un DataFrame à partir des données initiales
     df = pd.DataFrame(data)
-
+    
     # Afficher et permettre l'édition du tableau
     st.write("Remplissez le tableau ci-dessous avec vos articles et les liens correspondants :")
-    edited_df = st.data_editor(df, num_rows="dynamic", key="editor")
-
+    edited_df = st.experimental_data_editor(df, num_rows="dynamic", key="editor")
+    
     if st.button("Traiter les Articles"):
         if edited_df.empty:
             st.error("Veuillez entrer au moins un article et un lien.")
@@ -81,28 +68,37 @@ def main():
             original_texts = []
             modified_texts = []
             links = []
-
+            
             # Traiter chaque article
             for _, row in edited_df.iterrows():
                 article = row["Article"]
                 link = row["Lien"]
-                modified_text = insert_anchor(article, link)
+                
+                # Choisir une ancre aléatoire
+                random_anchor_text = random.choice(ancres)
+                
+                # Créer l'ancre HTML avec le lien fourni
+                formatted_anchor = format_anchor(link, random_anchor_text)
+                
+                # Ajouter l'ancre dans un paragraphe aléatoire
+                modified_article = insert_anchor_randomly(article, formatted_anchor)
+                
                 original_texts.append(article)
-                modified_texts.append(modified_text)
+                modified_texts.append(modified_article)
                 links.append(link)
-
+            
             # Créer un DataFrame avec les résultats
             results_df = pd.DataFrame({
                 "Article Original": original_texts,
                 "Lien": links,
                 "Article Modifié (avec liens)": modified_texts
             })
-
+            
             # Afficher le DataFrame sur Streamlit
             st.write("Résultats de la détection et de la modification des ancres :")
             st.dataframe(results_df)
-
-            # Option de téléchargement en CSV avec encodage correct et délimitation par point-virgule
+            
+            # Option de téléchargement en CSV
             csv_buffer = io.StringIO()
             results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_ALL)
             st.download_button(
