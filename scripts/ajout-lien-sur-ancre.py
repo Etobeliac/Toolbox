@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import re
 import random
+import io
+import csv
 
 # Liste des ancres possibles
 ancres = [
@@ -69,6 +71,7 @@ def main():
 
     # Afficher et permettre l'édition du tableau
     st.write("Remplissez le tableau ci-dessous avec vos articles et les liens correspondants :")
+    st.write("**Remarque**: Copiez le tableau en Excel pour le modifier, puis collez-le de nouveau ici.")
     edited_df = st.experimental_data_editor(df, num_rows="dynamic", key="editor")
 
     if st.button("Traiter les Articles"):
