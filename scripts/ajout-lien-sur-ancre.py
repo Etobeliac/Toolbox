@@ -5,7 +5,7 @@ import io
 import csv
 
 # Regex pour détecter les balises <a> existantes et mettre à jour leur href
-ancre_pattern = re.compile(r'(<a\s+[^>]*href=["\'][^"\']*["\'][^>]*>)(.*?)(</a>)', re.IGNORECASE)
+ancre_pattern = re.compile(r'(<a\s+[^>]*href=["\'][^"\']*["\'])([^>]*>.*?</a>)', re.IGNORECASE)
 
 def update_existing_anchors(text, new_url):
     # Assurez-vous que le texte est une chaîne et qu'il n'est pas vide
@@ -14,10 +14,10 @@ def update_existing_anchors(text, new_url):
 
     # Fonction pour remplacer le lien href dans les balises <a>
     def replace_href(match):
-        opening_tag, anchor_text, closing_tag = match.groups()
+        opening_tag, rest_of_tag = match.groups()
         # Mettre à jour uniquement le href sans changer l'ancre texte
         updated_tag = re.sub(r'href=["\'][^"\']*["\']', f'href="{new_url}"', opening_tag)
-        return f"{updated_tag}{anchor_text}{closing_tag}"
+        return f"{updated_tag}{rest_of_tag}"
 
     # Appliquer la mise à jour des liens href dans les balises <a>
     modified_text = re.sub(ancre_pattern, replace_href, text)
@@ -29,7 +29,7 @@ def main():
     # Exemple de données initiales pour le tableau
     data = {
         "Article": [
-            '<p>Les ajustements de suspension sont cruciaux. <a href="https://ancien-lien.com">Cliquez ici</a> pour en savoir plus.</p>'
+            '<p>Les ajustements de suspension sont cruciaux. <a href="#">Découvrez ici</a> pour en savoir plus.</p>'
         ] * 5,
         "Lien": ["https://votre-lien.com"] * 5
     }
