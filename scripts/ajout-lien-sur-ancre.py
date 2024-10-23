@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import re
 import io
+import csv
 
 # Liste des ancres possibles
 ancres = [
@@ -94,9 +95,9 @@ def main():
             st.write("Résultats de la détection et de la modification des ancres :")
             st.dataframe(results_df)
 
-            # Option de téléchargement en CSV
+            # Option de téléchargement en CSV avec encodage correct et délimitation par point-virgule
             csv_buffer = io.StringIO()
-            results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
+            results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_ALL)
             st.download_button(
                 label="Télécharger les résultats (CSV)",
                 data=csv_buffer.getvalue().encode('utf-8-sig'),
