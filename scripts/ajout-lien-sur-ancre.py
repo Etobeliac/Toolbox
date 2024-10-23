@@ -1,27 +1,27 @@
 import streamlit as st
 import pandas as pd
-import re
 import io
 import csv
-
-# Regex pour détecter les balises <a> avec href="#"
-ancre_pattern = re.compile(r'(<a\s+[^>]*href=["\']#["\'])([^>]*>.*?</a>)', re.IGNORECASE)
+from bs4 import BeautifulSoup
 
 def update_anchor_href(text, new_url):
     # Assurez-vous que le texte est une chaîne et qu'il n'est pas vide
     if not isinstance(text, str) or not text.strip():
         return text, "Erreur"
 
-    # Fonction pour remplacer href="#" par le nouveau lien
-    def replace_href(match):
-        opening_tag, rest_of_tag = match.groups()
-        # Remplacer href="#" par href="new_url"
-        updated_tag = re.sub(r'href=["\']#["\']', f'href="{new_url}"', opening_tag)
-        return f"{updated_tag}{rest_of_tag}"
+    # Utiliser BeautifulSoup pour parser le HTML et modifier les href
+    soup = BeautifulSoup(text, "html.parser")
+    modified = False
 
-    # Appliquer la mise à jour des liens href dans les balises <a> avec href="#"
-    modified_text = re.sub(ancre_pattern, replace_href, text)
-    return modified_text, "OK"
+    # Trouver toutes les balises <a> et modifier celles avec href="#"
+    for a_tag in soup.find_all("a", href="#"):
+        a_tag['href'] = new_url
+        modified = True
+
+    if modified:
+        return str(soup), "OK"
+    else:
+        return text, "Erreur"
 
 def main():
     st.title("Détecteur et Modificateur d'Ancres avec Liens Personnalisés")
