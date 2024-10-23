@@ -28,23 +28,33 @@ ancres = [
     "Bénéficier des offres", "S'inscrire à la newsletter", "Recevoir les actualités"
 ]
 
-# Crée un motif de regex pour détecter les ancres possibles
-ancre_pattern = re.compile(r'\b(' + '|'.join(re.escape(ancre) for ancre in ancres) + r')\b', re.IGNORECASE)
+# Crée un motif de regex pour détecter les balises <a> avec des ancres existantes
+ancre_pattern = re.compile(
+    r'(<a\s+[^>]*href=["\'].*?["\'][^>]*>)(.*?)</a>',
+    re.IGNORECASE
+)
 
-def detect_and_modify_anchors(text, url):
-    # Assurez-vous que le texte est une chaîne et qu'il n'est pas vide
+def detect_and_update_anchors(text, url):
+    # Vérifier si le texte est une chaîne valide et non vide
     if not isinstance(text, str) or not text.strip():
         return text, "Erreur"
 
-    # Trouver toutes les ancres dans le texte
-    matches = ancre_pattern.findall(text)
-    
-    # Si aucune ancre n'est trouvée, retourner une erreur
-    if not matches:
-        return text, "Erreur"
-    
-    # Remplacer les ancres trouvées par des liens HTML avec l'URL fournie
-    modified_text = re.sub(ancre_pattern, fr'<a href="{url}">\1</a>', text)
+    # Fonction pour remplacer le lien des ancres existantes
+    def replace_href(match):
+        opening_tag = match.group(1)
+        anchor_text = match.group(2)
+
+        # Vérifier si l'ancre correspond à notre liste d'ancres définies
+        if any(re.fullmatch(re.escape(a), anchor_text, re.IGNORECASE) for a in ancres):
+            # Mettre à jour le href de l'ancre existante avec le lien fourni
+            updated_tag = re.sub(r'href=["\'].*?["\']', f'href="{url}"', opening_tag)
+            return f"{updated_tag}{anchor_text}</a>"
+        else:
+            # Si le texte d'ancre ne correspond pas, ne pas modifier
+            return match.group(0)
+
+    # Appliquer la mise à jour des ancres dans le texte
+    modified_text = re.sub(ancre_pattern, replace_href, text)
     return modified_text, "OK"
 
 def main():
@@ -77,7 +87,7 @@ def main():
             for _, row in edited_df.iterrows():
                 article = row["Article"]
                 link = row["Lien"]
-                modified_text, status = detect_and_modify_anchors(article, link)
+                modified_text, status = detect_and_update_anchors(article, link)
                 original_texts.append(article)
                 modified_texts.append(modified_text)
                 links.append(link)
