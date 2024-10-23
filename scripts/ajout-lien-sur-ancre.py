@@ -4,30 +4,6 @@ import re
 import io
 import csv
 
-# Liste des ancres possibles pour référence, mais nous allons utiliser celles présentes dans le texte uniquement.
-ancres = [
-    "Voir la suite", "Continuer la lecture", "Poursuivre la lecture", "Aller plus loin",
-    "Approfondir le sujet", "Découvrir plus en détail", "En savoir plus sur le sujet",
-    "Plongez au cœur du sujet", "Découvrez tout ce qu'il faut savoir", "Lire l'intégralité de l'article",
-    "Accéder à la ressource", "Consultez la page dédiée", "Visitez la page", "Cliquez pour en savoir plus",
-    "Plus d'infos", "Informations", "Détails complets", "Voir tout", "Afficher plus", "Découvrir le contenu",
-    "Explorer le sujet", "En apprendre plus sur ce thème", "Tout savoir sur ce sujet", "Comprendre le sujet",
-    "Analyse approfondie", "Décryptage", "Point de vue", "Perspective", "Avis d'expert", "Conseils d'expert",
-    "Ressources utiles", "Liens utiles", "Documentation", "Références", "Astuces et conseils", "Trucs et astuces",
-    "Bonnes pratiques", "Meilleures pratiques", "Guide complet", "Tutoriel", "FAQ", "Questions fréquentes",
-    "Assistance", "Support", "Aide", "Contactez l'équipe", "Nous joindre", "Demander de l'aide", "Obtenir de l'aide",
-    "Soumettre une question", "Poser une question à l'expert", "Participer à la discussion", "Rejoindre la conversation",
-    "Partager votre avis", "Laisser un commentaire", "Donner votre feedback", "Votre opinion nous intéresse",
-    "Témoignages", "Ce qu'ils en disent", "Avis clients", "Voir les avis", "Lire les témoignages",
-    "Partagez votre expérience", "Expériences", "Retour d'expérience", "Cas client", "Exemples concrets",
-    "Études de cas", "Success stories", "Histoires de réussite", "Inspiration", "Idées", "Solutions", "Innovations",
-    "Actualités", "Nouveautés", "Dernières nouvelles", "À la une", "En direct", "Tendances", "Tendances actuelles",
-    "Le meilleur de", "Sélection", "Choix de la rédaction", "Coup de cœur", "Recommandations", "Suggestions",
-    "Conseils personnalisés", "Offres spéciales", "Promotions", "Exclusivités", "Bons plans", "Codes promo",
-    "Réductions", "Meilleures offres", "Ventes flash", "Découvrir les offres", "Profiter des offres",
-    "Bénéficier des offres", "S'inscrire à la newsletter", "Recevoir les actualités"
-]
-
 # Regex pour détecter les balises <a> existantes et mettre à jour leur href
 ancre_pattern = re.compile(r'(<a\s+[^>]*href=["\'][^"\']*["\'][^>]*>)(.*?)(</a>)', re.IGNORECASE)
 
@@ -52,7 +28,9 @@ def main():
 
     # Exemple de données initiales pour le tableau
     data = {
-        "Article": ["<p>Découvrez nos <a href='#'>solutions</a> innovantes...</p>"] * 5,
+        "Article": [
+            '<p>Les ajustements de suspension sont cruciaux. <a href="https://ancien-lien.com">Cliquez ici</a> pour en savoir plus.</p>'
+        ] * 5,
         "Lien": ["https://votre-lien.com"] * 5
     }
 
