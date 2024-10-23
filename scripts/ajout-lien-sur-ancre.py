@@ -31,6 +31,10 @@ ancres = [
 ancre_pattern = re.compile(r'\b(' + '|'.join(re.escape(ancre) for ancre in ancres) + r')\b', re.IGNORECASE)
 
 def detect_and_modify_anchors(text, url):
+    # Assurez-vous que le texte est une chaîne et qu'il n'est pas vide
+    if not isinstance(text, str) or not text.strip():
+        return text, "Erreur"
+
     # Trouver toutes les ancres dans le texte
     matches = ancre_pattern.findall(text)
     
