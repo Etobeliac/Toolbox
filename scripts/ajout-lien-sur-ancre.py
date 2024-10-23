@@ -4,22 +4,22 @@ import re
 import io
 import csv
 
-# Regex pour détecter les balises <a> existantes et mettre à jour leur href
-ancre_pattern = re.compile(r'(<a\s+[^>]*href=["\'][^"\']*["\'])([^>]*>.*?</a>)', re.IGNORECASE)
+# Regex pour détecter les balises <a> avec href="#"
+ancre_pattern = re.compile(r'(<a\s+[^>]*href=["\']#["\'])([^>]*>.*?</a>)', re.IGNORECASE)
 
-def update_existing_anchors(text, new_url):
+def update_anchor_href(text, new_url):
     # Assurez-vous que le texte est une chaîne et qu'il n'est pas vide
     if not isinstance(text, str) or not text.strip():
         return text, "Erreur"
 
-    # Fonction pour remplacer le lien href dans les balises <a>
+    # Fonction pour remplacer href="#" par le nouveau lien
     def replace_href(match):
         opening_tag, rest_of_tag = match.groups()
-        # Mettre à jour uniquement le href sans changer l'ancre texte
-        updated_tag = re.sub(r'href=["\'][^"\']*["\']', f'href="{new_url}"', opening_tag)
+        # Remplacer href="#" par href="new_url"
+        updated_tag = re.sub(r'href=["\']#["\']', f'href="{new_url}"', opening_tag)
         return f"{updated_tag}{rest_of_tag}"
 
-    # Appliquer la mise à jour des liens href dans les balises <a>
+    # Appliquer la mise à jour des liens href dans les balises <a> avec href="#"
     modified_text = re.sub(ancre_pattern, replace_href, text)
     return modified_text, "OK"
 
@@ -55,7 +55,7 @@ def main():
             for _, row in edited_df.iterrows():
                 article = row["Article"]
                 link = row["Lien"]
-                modified_text, status = update_existing_anchors(article, link)
+                modified_text, status = update_anchor_href(article, link)
                 original_texts.append(article)
                 modified_texts.append(modified_text)
                 links.append(link)
