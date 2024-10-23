@@ -4,7 +4,21 @@ import pandas as pd
 from requests.auth import HTTPBasicAuth
 import io
 import csv
+import random
+import re
 import html
+
+# Liste des ancres possibles
+ancres = [
+    "En savoir plus", "Cliquez ici pour plus d'informations", "Découvrir davantage",
+    "En apprendre davantage", "Visitez notre site", "Découvrez notre site",
+    "En découvrir plus sur ce site", "Cliquez ici", "Plus d'infos ici",
+    "Accédez au site", "Lire la suite", "Découvrez ici",
+    "Suivez ce lien", "Visitez cette page", "En savoir plus ici",
+    "Plus d'informations", "Visitez notre page", "Cliquez pour en savoir plus",
+    "Apprenez-en plus ici", "Plus d'infos", "Ce site spécialiste dans le domaine"
+    # Ajoutez-en d'autres si nécessaire
+]
 
 @st.cache_data(ttl=3600)  # Cache les résultats pendant 1 heure
 def get_draft_urls_and_content(username, password, base_url):
@@ -40,14 +54,39 @@ def get_draft_urls_and_content(username, password, base_url):
         content_html = post.get('content', {}).get('rendered', '')
         content_html = html.unescape(content_html)  # Décodage des entités HTML
         
+        # Ajouter l'insertion d'ancre ici
+        modified_content = insert_anchor(content_html)
+        
         urls_and_content.append({
             'URL du site': base_url,
             'URL du brouillon': post['link'],
             'Thématique': ', '.join(categories),
-            'Contenu': content_html
+            'Contenu': content_html,
+            'Contenu modifié': modified_content
         })
 
     return urls_and_content
+
+def insert_anchor(content):
+    # Diviser le contenu en paragraphes
+    paragraphs = re.split(r'(?<=</p>)\s*(?=<p>)', content)
+    
+    if len(paragraphs) > 1:
+        # Choisir aléatoirement un paragraphe (sauf le dernier)
+        insert_index = random.randint(0, len(paragraphs) - 2)
+        
+        # Choisir une ancre aléatoire
+        anchor = random.choice(ancres)
+        
+        # Insérer l'ancre à la fin du paragraphe choisi
+        paragraphs[insert_index] = paragraphs[insert_index][:-4] + f' <a href="#">{anchor}</a></p>'
+        
+        # Rejoindre les paragraphes
+        return ''.join(paragraphs)
+    else:
+        # Si un seul paragraphe, ajouter l'ancre à la fin
+        anchor = random.choice(ancres)
+        return content[:-4] + f' <a href="#">{anchor}</a></p>'
 
 def scrap_brouillon_site():
     st.title("Récupérateur d'URLs et Contenu des Articles en Brouillon WordPress")
@@ -83,8 +122,9 @@ def scrap_brouillon_site():
                 
                 df = pd.DataFrame(all_data)
                 st.write("Aperçu des données récupérées (avec un extrait du contenu) :")
-                preview_df = df[['URL du site', 'URL du brouillon', 'Thématique', 'Contenu']].head(10).copy()
+                preview_df = df[['URL du site', 'URL du brouillon', 'Thématique', 'Contenu', 'Contenu modifié']].head(10).copy()
                 preview_df['Contenu'] = preview_df['Contenu'].str[:100] + '...'
+                preview_df['Contenu modifié'] = preview_df['Contenu modifié'].str[:100] + '...'
                 st.write(preview_df)
 
                 csv_buffer = io.StringIO()
