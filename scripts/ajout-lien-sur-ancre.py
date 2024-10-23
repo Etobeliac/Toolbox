@@ -4,7 +4,7 @@ import re
 import io
 import csv
 
-# Liste des ancres possibles
+# Liste des ancres possibles pour référence, mais nous allons utiliser celles présentes dans le texte uniquement.
 ancres = [
     "Voir la suite", "Continuer la lecture", "Poursuivre la lecture", "Aller plus loin",
     "Approfondir le sujet", "Découvrir plus en détail", "En savoir plus sur le sujet",
@@ -28,23 +28,23 @@ ancres = [
     "Bénéficier des offres", "S'inscrire à la newsletter", "Recevoir les actualités"
 ]
 
-# Crée un motif de regex pour détecter les ancres possibles
-ancre_pattern = re.compile(r'\b(' + '|'.join(re.escape(ancre) for ancre in ancres) + r')\b', re.IGNORECASE)
+# Regex pour détecter les balises <a> existantes et mettre à jour leur href
+ancre_pattern = re.compile(r'(<a\s+[^>]*href=["\'][^"\']*["\'][^>]*>)(.*?)(</a>)', re.IGNORECASE)
 
-def detect_and_modify_anchors(text, url):
+def update_existing_anchors(text, new_url):
     # Assurez-vous que le texte est une chaîne et qu'il n'est pas vide
     if not isinstance(text, str) or not text.strip():
         return text, "Erreur"
 
-    # Trouver toutes les ancres dans le texte
-    matches = ancre_pattern.findall(text)
-    
-    # Si aucune ancre n'est trouvée, retourner une erreur
-    if not matches:
-        return text, "Erreur"
-    
-    # Remplacer les ancres trouvées par des liens HTML avec l'URL fournie
-    modified_text = re.sub(ancre_pattern, fr'<a href="{url}">\1</a>', text)
+    # Fonction pour remplacer le lien href dans les balises <a>
+    def replace_href(match):
+        opening_tag, anchor_text, closing_tag = match.groups()
+        # Mettre à jour uniquement le href sans changer l'ancre texte
+        updated_tag = re.sub(r'href=["\'][^"\']*["\']', f'href="{new_url}"', opening_tag)
+        return f"{updated_tag}{anchor_text}{closing_tag}"
+
+    # Appliquer la mise à jour des liens href dans les balises <a>
+    modified_text = re.sub(ancre_pattern, replace_href, text)
     return modified_text, "OK"
 
 def main():
@@ -52,7 +52,7 @@ def main():
 
     # Exemple de données initiales pour le tableau
     data = {
-        "Article": ["Collez ou modifiez votre article ici..."] * 5,
+        "Article": ["<p>Découvrez nos <a href='#'>solutions</a> innovantes...</p>"] * 5,
         "Lien": ["https://votre-lien.com"] * 5
     }
 
@@ -77,7 +77,7 @@ def main():
             for _, row in edited_df.iterrows():
                 article = row["Article"]
                 link = row["Lien"]
-                modified_text, status = detect_and_modify_anchors(article, link)
+                modified_text, status = update_existing_anchors(article, link)
                 original_texts.append(article)
                 modified_texts.append(modified_text)
                 links.append(link)
