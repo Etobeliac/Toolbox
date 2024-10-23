@@ -71,8 +71,7 @@ def main():
 
     # Afficher et permettre l'édition du tableau
     st.write("Remplissez le tableau ci-dessous avec vos articles et les liens correspondants :")
-    st.write("**Remarque**: Copiez le tableau en Excel pour le modifier, puis collez-le de nouveau ici.")
-    edited_df = st.experimental_data_editor(df, num_rows="dynamic", key="editor")
+    edited_df = st.data_editor(df, num_rows="dynamic", key="editor")
 
     if st.button("Traiter les Articles"):
         if edited_df.empty:
