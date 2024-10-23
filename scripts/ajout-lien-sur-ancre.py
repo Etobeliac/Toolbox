@@ -46,7 +46,7 @@ def format_anchor(url, text):
 
 def main():
     st.title("Ajout Automatique de Liens sur Ancres dans les Articles")
-    
+
     # Exemple de données initiales pour le tableau
     data = {
         "Article": ["Collez ou modifiez votre article ici..."] * 3,
@@ -58,7 +58,7 @@ def main():
 
     # Afficher et permettre l'édition du tableau
     st.write("Remplissez le tableau ci-dessous avec vos articles et les liens correspondants :")
-    edited_df = st.experimental_data_editor(df, num_rows="dynamic", key="editor")
+    edited_df = st.data_editor(df, num_rows="dynamic", key="editor")
 
     if st.button("Traiter les Articles"):
         if edited_df.empty:
