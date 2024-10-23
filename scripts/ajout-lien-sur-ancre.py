@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import re
 import io
+import csv
 
 # Liste des ancres possibles
 ancres = [
@@ -94,17 +95,14 @@ def main():
             st.write("Résultats de la détection et de la modification des ancres :")
             st.dataframe(results_df)
 
-            # Option de téléchargement en Excel (.xlsx)
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                results_df.to_excel(writer, index=False, sheet_name='Résultats')
-                writer.save()
-
+            # Option de téléchargement en CSV avec encodage correct et délimitation par point-virgule
+            csv_buffer = io.StringIO()
+            results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_ALL)
             st.download_button(
-                label="Télécharger les résultats (Excel)",
-                data=output.getvalue(),
-                file_name="resultats_ancres.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                label="Télécharger les résultats (CSV)",
+                data=csv_buffer.getvalue().encode('utf-8-sig'),
+                file_name="resultats_ancres.csv",
+                mime="text/csv"
             )
 
 if __name__ == "__main__":
