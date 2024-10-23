@@ -10,15 +10,32 @@ import html
 
 # Liste des ancres possibles
 ancres = [
-    "En savoir plus", "Cliquez ici pour plus d'informations", "Découvrir davantage",
-    "En apprendre davantage", "Visitez notre site", "Découvrez notre site",
-    "En découvrir plus sur ce site", "Cliquez ici", "Plus d'infos ici",
-    "Accédez au site", "Lire la suite", "Découvrez ici",
-    "Suivez ce lien", "Visitez cette page", "En savoir plus ici",
-    "Plus d'informations", "Visitez notre page", "Cliquez pour en savoir plus",
-    "Apprenez-en plus ici", "Plus d'infos", "Ce site spécialiste dans le domaine"
+    "Voir la suite", "Continuer la lecture", "Poursuivre la lecture", "Aller plus loin",
+    "Approfondir le sujet", "Découvrir plus en détail", "En savoir plus sur le sujet",
+    "Plongez au cœur du sujet", "Découvrez tout ce qu'il faut savoir", "Lire l'intégralité de l'article",
+    "Accéder à la ressource", "Consultez la page dédiée", "Visitez la page", "Cliquez pour en savoir plus",
+    "Plus d'infos", "Informations", "Détails complets", "Voir tout", "Afficher plus",
+    "Découvrir le contenu", "Explorer le sujet", "En apprendre plus sur ce thème",
+    "Tout savoir sur ce sujet", "Comprendre le sujet", "Analyse approfondie", "Décryptage",
+    "Point de vue", "Perspective", "Avis d'expert", "Conseils d'expert", "Ressources utiles",
+    "Liens utiles", "Documentation", "Références", "Astuces et conseils", "Trucs et astuces",
+    "Bonnes pratiques", "Meilleures pratiques", "Guide complet", "Tutoriel", "FAQ",
+    "Questions fréquentes", "Assistance", "Support", "Aide", "Contactez l'équipe",
+    "Nous joindre", "Demander de l'aide", "Obtenir de l'aide", "Soumettre une question",
+    "Poser une question à l'expert", "Participer à la discussion", "Rejoindre la conversation",
+    "Partager votre avis", "Laisser un commentaire", "Donner votre feedback", "Votre opinion nous intéresse",
+    "Témoignages", "Ce qu'ils en disent", "Avis clients", "Voir les avis", "Lire les témoignages",
+    "Partagez votre expérience", "Expériences", "Retour d'expérience", "Cas client",
+    "Exemples concrets", "Études de cas", "Success stories", "Histoires de réussite", "Inspiration",
+    "Idées", "Solutions", "Innovations", "Actualités", "Nouveautés", "Dernières nouvelles",
+    "À la une", "En direct", "Tendances", "Tendances actuelles", "Le meilleur de",
+    "Sélection", "Choix de la rédaction", "Coup de cœur", "Recommandations", "Suggestions",
+    "Conseils personnalisés", "Offres spéciales", "Promotions", "Exclusivités", "Bons plans",
+    "Codes promo", "Réductions", "Meilleures offres", "Ventes flash", "Découvrir les offres",
+    "Profiter des offres", "Bénéficier des offres", "S'inscrire à la newsletter", "Recevoir les actualités"
     # Ajoutez-en d'autres si nécessaire
 ]
+
 
 @st.cache_data(ttl=3600)  # Cache les résultats pendant 1 heure
 def get_draft_urls_and_content(username, password, base_url):
