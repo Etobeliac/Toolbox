@@ -47,66 +47,82 @@ def format_anchor(url, text):
 def main():
     st.title("Ajout Automatique de Liens sur Ancres dans les Articles")
     
-    # Exemple de données initiales pour le tableau
-    data = {
-        "Article": ["Collez ou modifiez votre article ici..."] * 5,
-        "Lien": ["https://votre-lien.com"] * 5
-    }
-    
-    # Créer un DataFrame à partir des données initiales
-    df = pd.DataFrame(data)
-    
-    # Afficher et permettre l'édition du tableau
     st.write("Remplissez le tableau ci-dessous avec vos articles et les liens correspondants :")
-    edited_df = st.experimental_data_editor(df, num_rows="dynamic", key="editor")
+
+    # Exemple de modèle CSV
+    if st.button("Télécharger Modèle CSV"):
+        model_df = pd.DataFrame({"Article": ["Collez ou modifiez votre article ici..."], "Lien": ["https://votre-lien.com"]})
+        csv_buffer = io.StringIO()
+        model_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';')
+        st.download_button(
+            label="Télécharger Modèle CSV",
+            data=csv_buffer.getvalue().encode('utf-8-sig'),
+            file_name="modele_articles_liens.csv",
+            mime="text/csv"
+        )
+
+    # Télécharger le fichier CSV
+    uploaded_file = st.file_uploader("Chargez un fichier CSV avec les colonnes 'Article' et 'Lien'", type="csv")
     
-    if st.button("Traiter les Articles"):
-        if edited_df.empty:
-            st.error("Veuillez entrer au moins un article et un lien.")
-        else:
-            # Créer des listes pour stocker les résultats
-            original_texts = []
-            modified_texts = []
-            links = []
-            
-            # Traiter chaque article
-            for _, row in edited_df.iterrows():
-                article = row["Article"]
-                link = row["Lien"]
-                
-                # Choisir une ancre aléatoire
-                random_anchor_text = random.choice(ancres)
-                
-                # Créer l'ancre HTML avec le lien fourni
-                formatted_anchor = format_anchor(link, random_anchor_text)
-                
-                # Ajouter l'ancre dans un paragraphe aléatoire
-                modified_article = insert_anchor_randomly(article, formatted_anchor)
-                
-                original_texts.append(article)
-                modified_texts.append(modified_article)
-                links.append(link)
-            
-            # Créer un DataFrame avec les résultats
-            results_df = pd.DataFrame({
-                "Article Original": original_texts,
-                "Lien": links,
-                "Article Modifié (avec liens)": modified_texts
-            })
-            
-            # Afficher le DataFrame sur Streamlit
-            st.write("Résultats de la détection et de la modification des ancres :")
-            st.dataframe(results_df)
-            
-            # Option de téléchargement en CSV
-            csv_buffer = io.StringIO()
-            results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_ALL)
-            st.download_button(
-                label="Télécharger les résultats (CSV)",
-                data=csv_buffer.getvalue().encode('utf-8-sig'),
-                file_name="resultats_ancres.csv",
-                mime="text/csv"
-            )
+    if uploaded_file is not None:
+        # Lire le fichier CSV
+        try:
+            df = pd.read_csv(uploaded_file, sep=';', encoding='utf-8-sig')
+        except Exception as e:
+            st.error("Erreur de lecture du fichier. Assurez-vous qu'il est au format CSV et encodé en UTF-8-SIG.")
+            st.stop()
+
+        if 'Article' not in df.columns or 'Lien' not in df.columns:
+            st.error("Le fichier doit contenir les colonnes 'Article' et 'Lien'.")
+            st.stop()
+        
+        if st.button("Traiter les Articles"):
+            if df.empty:
+                st.error("Veuillez entrer au moins un article et un lien.")
+            else:
+                # Créer des listes pour stocker les résultats
+                original_texts = []
+                modified_texts = []
+                links = []
+
+                # Traiter chaque article
+                for _, row in df.iterrows():
+                    article = row["Article"]
+                    link = row["Lien"]
+
+                    # Choisir une ancre aléatoire
+                    random_anchor_text = random.choice(ancres)
+
+                    # Créer l'ancre HTML avec le lien fourni
+                    formatted_anchor = format_anchor(link, random_anchor_text)
+
+                    # Ajouter l'ancre dans un paragraphe aléatoire
+                    modified_article = insert_anchor_randomly(article, formatted_anchor)
+
+                    original_texts.append(article)
+                    modified_texts.append(modified_article)
+                    links.append(link)
+
+                # Créer un DataFrame avec les résultats
+                results_df = pd.DataFrame({
+                    "Article Original": original_texts,
+                    "Lien": links,
+                    "Article Modifié (avec liens)": modified_texts
+                })
+
+                # Afficher le DataFrame sur Streamlit
+                st.write("Résultats de la détection et de la modification des ancres :")
+                st.dataframe(results_df)
+
+                # Option de téléchargement en CSV
+                csv_buffer = io.StringIO()
+                results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_ALL)
+                st.download_button(
+                    label="Télécharger les résultats (CSV)",
+                    data=csv_buffer.getvalue().encode('utf-8-sig'),
+                    file_name="resultats_ancres.csv",
+                    mime="text/csv"
+                )
 
 if __name__ == "__main__":
     main()
