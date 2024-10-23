@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import re
 import io
-import csv
 
 # Liste des ancres possibles
 ancres = [
@@ -28,33 +27,23 @@ ancres = [
     "Bénéficier des offres", "S'inscrire à la newsletter", "Recevoir les actualités"
 ]
 
-# Crée un motif de regex pour détecter les balises <a> avec des ancres existantes
-ancre_pattern = re.compile(
-    r'(<a\s+[^>]*href=["\'].*?["\'][^>]*>)(.*?)</a>',
-    re.IGNORECASE
-)
+# Crée un motif de regex pour détecter les ancres possibles
+ancre_pattern = re.compile(r'\b(' + '|'.join(re.escape(ancre) for ancre in ancres) + r')\b', re.IGNORECASE)
 
-def detect_and_update_anchors(text, url):
-    # Vérifier si le texte est une chaîne valide et non vide
+def detect_and_modify_anchors(text, url):
+    # Assurez-vous que le texte est une chaîne et qu'il n'est pas vide
     if not isinstance(text, str) or not text.strip():
         return text, "Erreur"
 
-    # Fonction pour remplacer le lien des ancres existantes
-    def replace_href(match):
-        opening_tag = match.group(1)
-        anchor_text = match.group(2)
-
-        # Vérifier si l'ancre correspond à notre liste d'ancres définies
-        if any(re.fullmatch(re.escape(a), anchor_text, re.IGNORECASE) for a in ancres):
-            # Mettre à jour le href de l'ancre existante avec le lien fourni
-            updated_tag = re.sub(r'href=["\'].*?["\']', f'href="{url}"', opening_tag)
-            return f"{updated_tag}{anchor_text}</a>"
-        else:
-            # Si le texte d'ancre ne correspond pas, ne pas modifier
-            return match.group(0)
-
-    # Appliquer la mise à jour des ancres dans le texte
-    modified_text = re.sub(ancre_pattern, replace_href, text)
+    # Trouver toutes les ancres dans le texte
+    matches = ancre_pattern.findall(text)
+    
+    # Si aucune ancre n'est trouvée, retourner une erreur
+    if not matches:
+        return text, "Erreur"
+    
+    # Remplacer les ancres trouvées par des liens HTML avec l'URL fournie
+    modified_text = re.sub(ancre_pattern, fr'<a href="{url}">\1</a>', text)
     return modified_text, "OK"
 
 def main():
@@ -87,7 +76,7 @@ def main():
             for _, row in edited_df.iterrows():
                 article = row["Article"]
                 link = row["Lien"]
-                modified_text, status = detect_and_update_anchors(article, link)
+                modified_text, status = detect_and_modify_anchors(article, link)
                 original_texts.append(article)
                 modified_texts.append(modified_text)
                 links.append(link)
@@ -105,14 +94,17 @@ def main():
             st.write("Résultats de la détection et de la modification des ancres :")
             st.dataframe(results_df)
 
-            # Option de téléchargement en CSV avec encodage correct et délimitation par point-virgule
-            csv_buffer = io.StringIO()
-            results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_ALL)
+            # Option de téléchargement en Excel (.xlsx)
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                results_df.to_excel(writer, index=False, sheet_name='Résultats')
+                writer.save()
+
             st.download_button(
-                label="Télécharger les résultats (CSV)",
-                data=csv_buffer.getvalue().encode('utf-8-sig'),
-                file_name="resultats_ancres.csv",
-                mime="text/csv"
+                label="Télécharger les résultats (Excel)",
+                data=output.getvalue(),
+                file_name="resultats_ancres.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
 if __name__ == "__main__":
