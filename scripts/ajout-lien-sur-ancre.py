@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import re
+import io
 
 # Liste des ancres possibles
 ancres = [
@@ -29,7 +30,7 @@ ancres = [
 # Crée un motif de regex pour détecter les ancres possibles
 ancre_pattern = re.compile(r'\b(' + '|'.join(re.escape(ancre) for ancre in ancres) + r')\b', re.IGNORECASE)
 
-def detect_and_modify_anchors(text):
+def detect_and_modify_anchors(text, url):
     # Trouver toutes les ancres dans le texte
     matches = ancre_pattern.findall(text)
     
@@ -37,45 +38,50 @@ def detect_and_modify_anchors(text):
     if not matches:
         return text, "Erreur"
     
-    # Remplacer les ancres trouvées par des liens HTML
-    modified_text = re.sub(ancre_pattern, r'<a href="#">\1</a>', text)
+    # Remplacer les ancres trouvées par des liens HTML avec l'URL fournie
+    modified_text = re.sub(ancre_pattern, fr'<a href="{url}">\1</a>', text)
     return modified_text, "OK"
 
 def main():
-    st.title("Détecteur et Modificateur d'Ancres dans les Articles")
+    st.title("Détecteur et Modificateur d'Ancres avec Liens Personnalisés")
 
     # Exemple de données initiales pour le tableau
     data = {
-        "Article": ["Collez ou modifiez votre article ici..."] * 5
+        "Article": ["Collez ou modifiez votre article ici..."] * 5,
+        "Lien": ["https://votre-lien.com"] * 5
     }
 
     # Créer un DataFrame à partir des données initiales
     df = pd.DataFrame(data)
 
     # Afficher et permettre l'édition du tableau
-    st.write("Remplissez le tableau ci-dessous avec vos articles :")
+    st.write("Remplissez le tableau ci-dessous avec vos articles et les liens correspondants :")
     edited_df = st.data_editor(df, num_rows="dynamic", key="editor")
 
     if st.button("Traiter les Articles"):
         if edited_df.empty:
-            st.error("Veuillez entrer au moins un article.")
+            st.error("Veuillez entrer au moins un article et un lien.")
         else:
             # Créer des listes pour stocker les résultats
             original_texts = []
             modified_texts = []
+            links = []
             statuses = []
 
             # Traiter chaque article
             for _, row in edited_df.iterrows():
                 article = row["Article"]
-                modified_text, status = detect_and_modify_anchors(article)
+                link = row["Lien"]
+                modified_text, status = detect_and_modify_anchors(article, link)
                 original_texts.append(article)
                 modified_texts.append(modified_text)
+                links.append(link)
                 statuses.append(status)
 
             # Créer un DataFrame avec les résultats
             results_df = pd.DataFrame({
                 "Article Original": original_texts,
+                "Lien": links,
                 "Article Modifié (avec liens)": modified_texts,
                 "Statut": statuses
             })
@@ -83,6 +89,16 @@ def main():
             # Afficher le DataFrame sur Streamlit
             st.write("Résultats de la détection et de la modification des ancres :")
             st.dataframe(results_df)
+
+            # Option de téléchargement en CSV
+            csv_buffer = io.StringIO()
+            results_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
+            st.download_button(
+                label="Télécharger les résultats (CSV)",
+                data=csv_buffer.getvalue().encode('utf-8-sig'),
+                file_name="resultats_ancres.csv",
+                mime="text/csv"
+            )
 
 if __name__ == "__main__":
     main()
