@@ -3,6 +3,7 @@ import pandas as pd
 import random
 import re
 import io
+import csv
 
 # Liste des ancres possibles
 ancres = [
